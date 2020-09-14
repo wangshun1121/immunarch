@@ -98,6 +98,9 @@ if (getRversion() >= "2.15.1") {
 #' following amplification and sequencing
 #'
 #' - dXX is a similar to d50 index where XX corresponds to desirable percent of total sequencing reads.
+#' 
+#' - Shannon Index is perhaps most commonly used of the many species diversity indices used in the literature.
+#' On some occasions it is called the Shannon-Wiener Index and on other occasions it is called the Shannon-Weaver Index.  
 #'
 #' @return
 #' For most methods, if input data is a single immune repertoire, then the function returns a numeric vector
@@ -151,6 +154,9 @@ if (getRversion() >= "2.15.1") {
 #'
 #' # d50
 #' repDiversity(.data = immdata$data, .method = "d50") %>% vis()
+#' 
+#' # Shannon-Wiener index
+#' repDiversity(.data = immdata$data, .method = "shannon", .do.norm = NA, .laplace = 0)
 #' @export repDiversity
 repDiversity <- function(.data, .method = "chao1", .col = "aa", .max.q = 6, .min.q = 1, .q = 5, .step = NA,
                          .quantile = c(.025, .975), .extrapolation = NA, .perc = 50,
@@ -225,6 +231,7 @@ repDiversity <- function(.data, .method = "chao1", .col = "aa", .max.q = 6, .min
     gini.simp = gini_simpson(.data = vec, .do.norm = TRUE, .laplace = .laplace),
     inv.simp = inverse_simpson(.data = vec, .do.norm = TRUE, .laplace = .laplace),
     gini = gini_coef(.data = vec, .do.norm = TRUE, .laplace = .laplace),
+    shannon = shannon(.data = vec, .do.norm = TRUE, .laplace = .laplace),
     raref = rarefaction(
       .data = vec, .step = .step, .quantile = .quantile,
       .extrapolation = .extrapolation, .norm = .norm, .verbose = .verbose
@@ -325,6 +332,14 @@ inverse_simpson <- function(.data, .do.norm = NA, .laplace = 0) {
   .data <- check_distribution(.data, .do.norm, .laplace)
   res <- 1 / sum(.data^2)
   add_class(res, "immunr_invsimp")
+}
+
+shannon <- function(.data, .do.norm = NA, .laplace = 0) {
+  .data <- check_distribution(.data, .do.norm, .laplace)
+  .data <- .data[.data>0]
+  p = .data/sum(.data)
+  res <-  -p%*%log(p)/log(length(p))
+  add_class(res, "immunr_shannon")
 }
 
 dXX <- function(.data, .perc = 10) {
